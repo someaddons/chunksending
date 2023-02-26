@@ -1,0 +1,14 @@
+{
+  "required": false,
+  "package": "com.chunksending.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ServerPlayerChunkSending"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
