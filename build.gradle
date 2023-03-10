@@ -96,9 +96,6 @@ dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}" //21
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
-
-    minecraftLibrary('com.ezylang:EvalEx:3.0.1')
-    jarJar(group:'com.ezylang',name:'EvalEx', version:'[2.0.1,4.0.0)')
 }
 
 jar {
