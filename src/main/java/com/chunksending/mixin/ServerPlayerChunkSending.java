@@ -1,6 +1,7 @@
 package com.chunksending.mixin;
 
 import com.chunksending.ChunkSending;
+import com.chunksending.IChunksendingPlayer;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
@@ -19,15 +20,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.*;
 
 @Mixin(ServerPlayer.class)
-public abstract class ServerPlayerChunkSending extends Player
+public abstract class ServerPlayerChunkSending extends Player implements IChunksendingPlayer
 {
     @Shadow
-    public ServerGamePacketListenerImpl connection;
+    public  ServerGamePacketListenerImpl connection;
     @Shadow
-    private boolean disconnected;
+    private boolean                      disconnected;
 
     @Unique
-    private Map<ChunkPos, Packet<?>> chunksToSend = new HashMap<>();
+    private Map<ChunkPos, List<Packet<?>>> chunksToSend = new HashMap<>();
 
     public ServerPlayerChunkSending(Level p_250508_, BlockPos p_250289_, float p_251702_, GameProfile p_252153_)
     {
@@ -39,7 +40,13 @@ public abstract class ServerPlayerChunkSending extends Player
     {
         ci.cancel();
 
-        chunksToSend.put(pos, chunkPacket);
+        List<Packet<?>> packetList = chunksToSend.get(pos);
+        if (packetList == null)
+        {
+            packetList = new ArrayList<>();
+            chunksToSend.put(pos, packetList);
+        }
+        packetList.add(chunkPacket);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
@@ -56,16 +63,33 @@ public abstract class ServerPlayerChunkSending extends Player
             return;
         }
 
-        final List<Map.Entry<ChunkPos, Packet<?>>> packets = new ArrayList<>(chunksToSend.entrySet());
+        final List<Map.Entry<ChunkPos, List<Packet<?>>>> packets = new ArrayList<>(chunksToSend.entrySet());
         packets.sort(Comparator.comparingDouble(
-                e -> e.getKey().getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())
+          e -> e.getKey().getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())
         ));
 
         for (int i = 0; i < packets.size() && i < ChunkSending.config.getCommonConfig().maxChunksPerTick; i++)
         {
-            final Map.Entry<ChunkPos, Packet<?>> entry = packets.get(i);
-            connection.send(entry.getValue());
+            final Map.Entry<ChunkPos, List<Packet<?>>> entry = packets.get(i);
+            for (final Packet packet : entry.getValue())
+            {
+                connection.send(packet);
+            }
             chunksToSend.remove(entry.getKey());
         }
+    }
+
+    @Override
+    public boolean attachToPending(final ChunkPos pos, final Packet<?> packet)
+    {
+        final List<Packet<?>> packetList = chunksToSend.get(pos);
+
+        if (packetList == null)
+        {
+            return false;
+        }
+
+        packetList.add(packet);
+        return true;
     }
 }

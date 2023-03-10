@@ -3,7 +3,8 @@
   "package": "com.chunksending.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "ServerPlayerChunkSending"
+    "ServerPlayerChunkSending",
+    "ChunkHolderMixin"
   ],
   "client": [
   ],
