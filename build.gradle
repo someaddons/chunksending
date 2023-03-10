@@ -17,7 +17,7 @@ apply plugin: 'org.spongepowered.mixin'
 
 version = "${mod_version}"
 group = "com.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "${modid}"
+archivesBaseName = "${modid}-forge"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -36,7 +36,7 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
 
             workingDirectory project.file('run')
-            arg "-mixin.config=" + archivesBaseName + ".mixins.json"
+            arg "-mixin.config=chunksending.mixins.json"
 
 
             mods {
