@@ -1,9 +1,9 @@
 package com.chunksending;
 
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.network.IPacket;
+import net.minecraft.util.math.ChunkPos;
 
 public interface IChunksendingPlayer
 {
-    boolean attachToPending(ChunkPos pos, Packet<?> packet);
+    boolean attachToPending(ChunkPos pos, IPacket<?> packet);
 }
