@@ -36,7 +36,11 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
     }
 
     @Inject(method = "trackChunk", at = @At("HEAD"), cancellable = true)
-    private void chunksending$trackChunk(ChunkPos pos, Packet<?> chunkPacket, CallbackInfo ci)
+    private void chunksending$trackChunk(
+      final ChunkPos pos,
+      final Packet<?> p_213844_2_,
+      final Packet<?> p_213844_3_,
+      final CallbackInfo ci)
     {
         ci.cancel();
 
@@ -46,7 +50,8 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
             packetList = new ArrayList<>();
             chunksToSend.put(pos, packetList);
         }
-        packetList.add(chunkPacket);
+        packetList.add(p_213844_2_);
+        packetList.add(p_213844_3_);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
@@ -65,7 +70,7 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
 
         final List<Map.Entry<ChunkPos, List<Packet<?>>>> packets = new ArrayList<>(chunksToSend.entrySet());
         packets.sort(Comparator.comparingDouble(
-          e -> e.getKey().getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())
+          e -> e.getKey().getWorldPosition().distSqr(blockPosition())
         ));
 
         for (int i = 0; i < packets.size() && i < ChunkSending.config.getCommonConfig().maxChunksPerTick; i++)

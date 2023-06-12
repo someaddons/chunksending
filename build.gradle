@@ -1,12 +1,7 @@
 plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
-    id 'io.github.juuxel.loom-quiltflower' version "${quiltflower_version}"
     id 'com.github.johnrengelman.shadow' version '7.1.2' apply false
-}
-
-quiltflower {
-    addToRuntimeClasspath.set(true)
 }
 
 var ENV = System.getenv()
@@ -19,9 +14,6 @@ if (ENV.MCMC_BUILD_NUMBER) {
 
 group = project.maven_group
 
-loom {
-    accessWidenerPath = file("src/main/resources/${project.archives_base_name}.accessWidener")
-}
 
 repositories {
     mavenLocal()
@@ -65,7 +57,7 @@ processResources {
     }
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 8
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
