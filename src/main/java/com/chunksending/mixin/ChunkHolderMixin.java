@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(ChunkHolder.class)
 public class ChunkHolderMixin
 {
@@ -24,9 +26,12 @@ public class ChunkHolderMixin
     private ChunkPos pos;
 
     @Inject(method = "broadcast", at = @At("HEAD"), cancellable = true)
-    private void chunksending$onBroadCastChanges(final Packet<?> packet, final boolean p_140065_, final CallbackInfo ci)
+    private void chunksending$onBroadCastChanges(
+      final List<ServerPlayer> list,
+      final Packet<?> packet,
+      final CallbackInfo ci)
     {
-        for (final ServerPlayer player : this.playerProvider.getPlayers(this.pos, p_140065_))
+        for (final ServerPlayer player : list)
         {
             if (!((IChunksendingPlayer) player).attachToPending(pos, packet))
             {
