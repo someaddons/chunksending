@@ -1,9 +1,10 @@
 package com.chunksending.config;
 
 import com.chunksending.ChunkSending;
+import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonObject;
 
-public class CommonConfiguration
+public class CommonConfiguration implements ICommonConfig
 {
     public int maxChunksPerTick = 5;
 

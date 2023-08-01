@@ -68,7 +68,7 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
           e -> e.getKey().getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())
         ));
 
-        for (int i = 0; i < packets.size() && i < ChunkSending.config.getCommonConfig().maxChunksPerTick; i++)
+        for (int i = 0; i < packets.size() && i < ChunkSending.config.getCommonConfig().maxChunksPerTick + packets.size() / 100; i++)
         {
             final Map.Entry<ChunkPos, List<Packet<?>>> entry = packets.get(i);
             for (final Packet packet : entry.getValue())
