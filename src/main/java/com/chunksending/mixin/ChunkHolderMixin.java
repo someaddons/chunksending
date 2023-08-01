@@ -21,13 +21,13 @@ public class ChunkHolderMixin
     @Final
     private ChunkPos pos;
 
+    @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
+
     @Inject(method = "broadcast", at = @At("HEAD"), cancellable = true)
     private void chunksending$onBroadCastChanges(
-      final List<ServerPlayer> players,
-      final Packet<?> packet,
-      final CallbackInfo ci)
+      final Packet<?> packet, final boolean p_140065_, final CallbackInfo ci)
     {
-        for (final ServerPlayer player : players)
+        for (final ServerPlayer player : playerProvider.getPlayers(this.pos, p_140065_))
         {
             if (!((IChunksendingPlayer) player).attachToPending(pos, packet))
             {
