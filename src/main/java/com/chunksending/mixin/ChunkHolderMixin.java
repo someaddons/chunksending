@@ -19,7 +19,7 @@ public class ChunkHolderMixin
 {
     @Shadow
     @Final
-    private ChunkPos pos;
+    ChunkPos pos;
 
     @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
 
