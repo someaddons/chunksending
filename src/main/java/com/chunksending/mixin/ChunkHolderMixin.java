@@ -19,7 +19,7 @@ public class ChunkHolderMixin
 {
     @Shadow
     @Final
-    private ChunkPos pos;
+    ChunkPos pos;
 
     @Inject(method = "broadcast", at = @At("HEAD"), cancellable = true)
     private void chunksending$onBroadCastChanges(
