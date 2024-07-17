@@ -5,6 +5,7 @@
   "refmap": "chunksending.refmap.json",
   "mixins": [
     "ServerPlayerChunkSending",
+    "PlayerChunkSenderMixin",
     "ChunkHolderMixin"
   ],
   "client": [
