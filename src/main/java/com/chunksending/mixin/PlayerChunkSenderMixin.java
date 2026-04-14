@@ -5,6 +5,7 @@ import com.chunksending.IBatchedUpdateSender;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.PlayerChunkSender;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.spongepowered.asm.mixin.*;
 
@@ -27,7 +28,7 @@ public class PlayerChunkSenderMixin implements IBatchedUpdateSender
     private        Map<ChunkPos, List<Packet<?>>> packetsToSend         = new HashMap<>();
 
     @Override
-    public boolean attachToPending(final ChunkPos pos, final Packet<?> packet)
+    public boolean attachToPending(final ChunkPos pos, final Packet<?> packet, final Player player)
     {
         List<Packet<?>> packetList = packetsToSend.get(pos);
 
@@ -38,6 +39,26 @@ public class PlayerChunkSenderMixin implements IBatchedUpdateSender
         }
 
         packetList.add(packet);
+
+        if (ChunkSending.config.getCommonConfig().debugLogging && packetsToSend.size() > 100)
+        {
+            if (packetsToSend.size() < 1000)
+            {
+                ChunkSending.LOGGER.info("Attached over: " + packetsToSend.size() + " packets" + player.getDisplayName().getString());
+            }
+            else
+            {
+                ChunkSending.LOGGER.info("Attached over: " + packetsToSend.size() + " packets player:" + player.getDisplayName().getString()+ " class:"+player.getClass() + " this:"+this, new RuntimeException());
+
+            }
+        }
+
+        if (packetsToSend.size() > 2000)
+        {
+            packetsToSend.clear();
+            return false;
+        }
+
         return true;
     }
 

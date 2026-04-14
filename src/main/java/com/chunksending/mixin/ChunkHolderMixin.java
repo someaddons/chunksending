@@ -35,7 +35,7 @@ public abstract class ChunkHolderMixin extends GenerationChunkHolder
     {
         for (final ServerPlayer player : list)
         {
-            if (!((IBatchedUpdateSender)player.connection.chunkSender).attachToPending(pos, packet))
+            if (!((IBatchedUpdateSender)player.connection.chunkSender).attachToPending(pos, packet, player))
             {
                 player.connection.send(packet);
             }
