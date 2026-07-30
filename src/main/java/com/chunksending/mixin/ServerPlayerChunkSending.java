@@ -1,15 +1,18 @@
 package com.chunksending.mixin;
 
 import com.chunksending.ChunkSending;
-import com.chunksending.IChunksendingPlayer;
+import com.chunksending.chunk.Data;
+import com.chunksending.chunk.IChunksendingPlayer;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.Packet;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -23,30 +26,34 @@ import java.util.*;
 public abstract class ServerPlayerChunkSending extends Player implements IChunksendingPlayer
 {
     @Shadow
-    public  ServerGamePacketListenerImpl connection;
-    @Shadow
-    private boolean                      disconnected;
+    private boolean disconnected;
 
     @Unique
-    private Map<ChunkPos, List<Packet<?>>> chunksToSend = new HashMap<>();
+    private Map<ChunkPos, Data> chunksToSend = new HashMap<>();
+
+    @Unique
+    private ResourceKey<Level> lastDimension = null;
+
+    @Unique
+    private ChunkPos sending = null;
 
     public ServerPlayerChunkSending(Level p_250508_, BlockPos p_250289_, float p_251702_, GameProfile p_252153_)
     {
         super(p_250508_, p_250289_, p_251702_, p_252153_);
     }
 
-    @Inject(method = "trackChunk", at = @At("HEAD"), cancellable = true)
-    private void chunksending$trackChunk(ChunkPos pos, Packet<?> chunkPacket, CallbackInfo ci)
+    @Inject(method = "untrackChunk", at = @At("HEAD"), cancellable = true)
+    private void chunksending$untrackChunk(final ChunkPos pos, final CallbackInfo ci)
     {
-        ci.cancel();
-
-        List<Packet<?>> packetList = chunksToSend.get(pos);
-        if (packetList == null)
+        if (chunksending$resetDimensionIfNeeded())
         {
-            packetList = new ArrayList<>();
-            chunksToSend.put(pos, packetList);
+            return;
         }
-        packetList.add(chunkPacket);
+
+        if (chunksToSend.remove(pos) != null)
+        {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
@@ -63,40 +70,88 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
             return;
         }
 
-        final List<Map.Entry<ChunkPos, List<Packet<?>>>> packets = new ArrayList<>(chunksToSend.entrySet());
-        packets.sort(Comparator.comparingDouble(
-          e -> e.getKey().getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())
-        ));
-
-        final int amount = ChunkSending.config.getCommonConfig().maxChunksPerTick + packets.size() / 10;
-
-        for (int i = 0; i < packets.size() && i < amount; i++)
+        if (chunksending$resetDimensionIfNeeded())
         {
-            final Map.Entry<ChunkPos, List<Packet<?>>> entry = packets.get(i);
-            for (final Packet packet : entry.getValue())
+            return;
+        }
+
+        final List<ChunkPos> positions = new ArrayList<>(chunksToSend.keySet());
+        positions.sort(Comparator.comparingDouble(e -> e.getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())));
+
+        final int amount = (level().getServer().isDedicatedServer() ? 1 : 3) * ChunkSending.config.getCommonConfig().maxChunksPerTick;
+        int sentCount = 0;
+        for (int i = 0; i < positions.size() && i < amount; i++)
+        {
+            final ChunkPos chunkPos = positions.get(i);
+            final Data data = chunksToSend.get(chunkPos);
+
+            if (data.player() == (Object) this)
             {
-                connection.send(packet);
+                final LevelChunk chunk = level().getChunkSource().getChunkNow(chunkPos.x, chunkPos.z);
+                if (chunk == null)
+                {
+                    if (!data.chunkMap().getPlayers(chunkPos, false).contains(data.player()))
+                    {
+                        chunksToSend.remove(chunkPos, data);
+                    }
+                    continue;
+                }
+
+                sentCount++;
+                sending = chunkPos;
+                data.chunkMap().playerLoadedChunk(data.player(), new MutableObject<>(), chunk);
+                sending = null;
+
+                chunksToSend.remove(chunkPos);
             }
-            chunksToSend.remove(entry.getKey());
+            else
+            {
+                chunksToSend.remove(chunkPos);
+            }
         }
 
         if (ChunkSending.config.getCommonConfig().debugLogging)
         {
-            ChunkSending.LOGGER.info("Sent: "+amount+" packets to "+getDisplayName().getString()+", in queue:"+ chunksToSend.size());
+            ChunkSending.LOGGER.info(
+                "Sent: " + sentCount + " packets to " + getDisplayName().getString() + ", in queue:" + chunksToSend.size() + " maximum possible to send:" + amount);
         }
     }
 
     @Override
-    public boolean attachToPending(final ChunkPos pos, final Packet<?> packet)
+    public void attachToPending(final ChunkMap chunkMap, final ServerPlayer player, final ChunkPos pos)
     {
-        final List<Packet<?>> packetList = chunksToSend.get(pos);
+        if (chunksending$resetDimensionIfNeeded())
+        {
+            return;
+        }
+        chunksToSend.putIfAbsent(pos, new Data(chunkMap, player, pos));
+    }
 
-        if (packetList == null)
+    @Override
+    public boolean isSending(final ChunkPos pos)
+    {
+        return pos.equals(sending);
+    }
+
+    @Unique
+    private boolean chunksending$resetDimensionIfNeeded()
+    {
+        final ResourceKey<Level> current = level().dimension();
+
+        if (lastDimension == null)
+        {
+            lastDimension = current;
+            return false;
+        }
+
+        if (lastDimension.equals(current))
         {
             return false;
         }
 
-        packetList.add(packet);
+        lastDimension = current;
+        chunksToSend.clear();
+        sending = null;
         return true;
     }
 }

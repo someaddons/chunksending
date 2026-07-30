@@ -1,1 +1,2 @@
 accessWidener   v2  named
+accessible method net/minecraft/server/level/ChunkMap playerLoadedChunk (Lnet/minecraft/server/level/ServerPlayer;Lorg/apache/commons/lang3/mutable/MutableObject;Lnet/minecraft/world/level/chunk/LevelChunk;)V
