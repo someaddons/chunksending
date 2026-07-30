@@ -4,8 +4,8 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "chunksending.refmap.json",
   "mixins": [
-    "ServerPlayerChunkSending",
-    "ChunkHolderMixin"
+    "ChunkMapMixin",
+    "ServerPlayerChunkSending"
   ],
   "client": [
   ],
