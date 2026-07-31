@@ -8,4 +8,5 @@ public interface IChunksendingPlayer
 {
     void attachToPending(final ChunkMap chunkMap, final ServerPlayer player, final ChunkPos pos);
     boolean isSending(final ChunkPos pos);
+    int chunksQueued();
 }

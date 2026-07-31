@@ -3,6 +3,7 @@ package com.chunksending.mixin;
 import com.chunksending.ChunkSending;
 import com.chunksending.chunk.Data;
 import com.chunksending.chunk.IChunksendingPlayer;
+import com.chunksending.event.EventHandler;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -78,9 +79,9 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
         final List<ChunkPos> positions = new ArrayList<>(chunksToSend.keySet());
         positions.sort(Comparator.comparingDouble(e -> e.getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())));
 
-        final int amount = (level().getServer().isDedicatedServer() ? 1 : 3) * ChunkSending.config.getCommonConfig().maxChunksPerTick;
+        final int amount = (level().getServer().isDedicatedServer() ? 1 : 3) * EventHandler.maxChunksPerPlayer;
         int sentCount = 0;
-        for (int i = 0; i < positions.size() && i < amount; i++)
+        for (int i = 0; i < positions.size() && sentCount < amount; i++)
         {
             final ChunkPos chunkPos = positions.get(i);
             final Data data = chunksToSend.get(chunkPos);
@@ -153,5 +154,11 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
         chunksToSend.clear();
         sending = null;
         return true;
+    }
+
+    @Override
+    public int chunksQueued()
+    {
+        return chunksToSend.size();
     }
 }
