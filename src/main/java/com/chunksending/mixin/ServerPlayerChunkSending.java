@@ -121,10 +121,7 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
     @Override
     public void attachToPending(final ChunkMap chunkMap, final ServerPlayer player, final ChunkPos pos)
     {
-        if (chunksending$resetDimensionIfNeeded())
-        {
-            return;
-        }
+        chunksending$resetDimensionIfNeeded();
         chunksToSend.putIfAbsent(pos, new Data(chunkMap, player, pos));
     }
 
