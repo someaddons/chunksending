@@ -1,6 +1,7 @@
 package com.chunksending;
 
 import com.chunksending.config.CommonConfiguration;
+import com.chunksending.event.EventHandler;
 import com.cupboard.config.CupboardConfig;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
@@ -12,6 +13,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Comparator;
 import java.util.Random;
+
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ChunkSending.MODID)
@@ -25,6 +28,7 @@ public class ChunkSending
     public ChunkSending()
     {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        EVENT_BUS.addListener(EventHandler::onServerTick);
     }
 
     private void setup(final FMLCommonSetupEvent event)
