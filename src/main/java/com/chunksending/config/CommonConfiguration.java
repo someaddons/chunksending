@@ -7,8 +7,9 @@ import com.google.gson.JsonObject;
 public class CommonConfiguration implements ICommonConfig
 {
     public int maxChunksPerTick = 15;
-    public int maxChunksPerTickAll = 80;
-    public boolean debugLogging = false;
+    public int     maxChunksPerTickAll = 80;
+    public boolean prioritizeDirection = true;
+    public boolean debugLogging        = false;
 
     public CommonConfiguration()
     {
@@ -29,6 +30,11 @@ public class CommonConfiguration implements ICommonConfig
         entry2.addProperty("desc:", "Maximum amount of chunks sent per tick globally for all players(equally split, minimum 1 per tick). Reduces the network impact of multiple players joining at once. Default: 80");
         entry2.addProperty("maxChunksPerTickAll", maxChunksPerTickAll);
         root.add("maxChunksPerTickAll", entry2);
+
+        final JsonObject entry3 = new JsonObject();
+        entry3.addProperty("desc:", "Enables chunks to prioritize loading in the direction the player is facing. Default: true");
+        entry3.addProperty("prioritizeDirection", prioritizeDirection);
+        root.add("prioritizeDirection", entry3);
 
         final JsonObject entry23 = new JsonObject();
         entry23.addProperty("desc:", "Enable debug logging to show the amount of chunks sent/queued");

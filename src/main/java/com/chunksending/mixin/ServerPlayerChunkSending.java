@@ -13,6 +13,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -77,7 +78,24 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
         }
 
         final List<ChunkPos> positions = new ArrayList<>(chunksToSend.keySet());
-        positions.sort(Comparator.comparingDouble(e -> e.getMiddleBlockPosition(getBlockY()).distSqr(blockPosition())));
+
+        BlockPos playerPos = blockPosition();
+        if (ChunkSending.config.getCommonConfig().prioritizeDirection)
+        {
+            final Vec3 lookAngle = this.getLookAngle().multiply(1, 0, 1).normalize();
+            playerPos = new BlockPos((int) (playerPos.getX() + lookAngle.x * 16 * 3), getBlockY(), (int) (playerPos.getZ() + lookAngle.z * 16 * 3));
+        }
+        final BlockPos compared = playerPos;
+
+        positions.sort(
+            Comparator.comparingInt((ChunkPos pos) -> {
+                final int chunkDistance = Math.max(
+                    Math.abs(pos.x - chunkPosition().x),
+                    Math.abs(pos.z - chunkPosition().z)
+                );
+
+                return chunkDistance <= 1 ? chunkDistance : 100;
+            }).thenComparing((e -> e.getMiddleBlockPosition(getBlockY()).distSqr(compared))));
 
         final int amount = (level().getServer().isDedicatedServer() ? 1 : 3) * EventHandler.maxChunksPerPlayer;
         int sentCount = 0;
