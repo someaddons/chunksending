@@ -2,9 +2,14 @@
   "required": false,
   "package": "com.chunksending.mixin",
   "compatibilityLevel": "JAVA_17",
+  "plugin": "com.chunksending.mixin.MixinConfig",
   "refmap": "chunksending.refmap.json",
   "mixins": [
     "ChunkMapMixin",
+    "cache.ChunkAccessPacketCacheMixin",
+    "cache.ChunkHolderPacketCacheMixin",
+    "cache.LevelChunkPacketCacheMixin",
+    "cache.ChunkMapPacketCacheMixin",
     "ServerPlayerChunkSending"
   ],
   "client": [

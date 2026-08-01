@@ -3,6 +3,7 @@ package com.chunksending.mixin;
 import com.chunksending.ChunkSending;
 import com.chunksending.chunk.Data;
 import com.chunksending.chunk.IChunksendingPlayer;
+import com.chunksending.config.CommonConfiguration;
 import com.chunksending.event.EventHandler;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
@@ -80,7 +81,7 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
         final List<ChunkPos> positions = new ArrayList<>(chunksToSend.keySet());
 
         BlockPos playerPos = blockPosition();
-        if (ChunkSending.config.getCommonConfig().prioritizeDirection)
+        if (CommonConfiguration.config.getCommonConfig().prioritizeDirection)
         {
             final Vec3 lookAngle = this.getLookAngle().multiply(1, 0, 1).normalize();
             playerPos = new BlockPos((int) (playerPos.getX() + lookAngle.x * 16 * 3), getBlockY(), (int) (playerPos.getZ() + lookAngle.z * 16 * 3));
@@ -129,7 +130,7 @@ public abstract class ServerPlayerChunkSending extends Player implements IChunks
             }
         }
 
-        if (ChunkSending.config.getCommonConfig().debugLogging)
+        if (CommonConfiguration.config.getCommonConfig().debugLogging)
         {
             ChunkSending.LOGGER.info(
                 "Sent: " + sentCount + " packets to " + getDisplayName().getString() + ", in queue:" + chunksToSend.size() + " maximum possible to send:" + amount);
