@@ -5,16 +5,17 @@
   "plugin": "com.chunksending.mixin.MixinConfig",
   "mixins": [
     "ChunkMapMixin",
+    "ServerPlayerChunkSending",
     "cache.ChunkAccessPacketCacheMixin",
     "cache.ChunkHolderPacketCacheMixin",
-    "cache.LevelChunkPacketCacheMixin",
     "cache.ChunkMapPacketCacheMixin",
-    "ServerPlayerChunkSending"
+    "cache.LevelChunkPacketCacheMixin",
+    "map.ServerEntityMapMixin"
   ],
   "client": [
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   },
   "minVersion": "0.8"
 }

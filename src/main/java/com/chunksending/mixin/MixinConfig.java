@@ -25,9 +25,14 @@ public class MixinConfig implements IMixinConfigPlugin
     @Override
     public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName)
     {
-        if (!CommonConfiguration.config.getCommonConfig().cacheChunkPackets)
+        if (!CommonConfiguration.config.getCommonConfig().itemFrameMapImprovements && mixinClassName.contains("ServerEntityMapMixin"))
         {
-            return mixinClassName.contains("cache");
+            return false;
+        }
+
+        if (!CommonConfiguration.config.getCommonConfig().cacheChunkPackets && mixinClassName.contains("cache"))
+        {
+            return false;
         }
 
         return true;
