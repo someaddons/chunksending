@@ -61,5 +61,6 @@ public class CommonConfiguration implements ICommonConfig
             ChunkSending.config.save();
         }
         maxChunksPerTickAll = Math.max(1 ,data.get("maxChunksPerTickAll").getAsJsonObject().get("maxChunksPerTickAll").getAsInt());
+        prioritizeDirection = data.get("prioritizeDirection").getAsJsonObject().get("prioritizeDirection").getAsBoolean();
     }
 }
