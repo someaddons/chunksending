@@ -1,14 +1,18 @@
 package com.chunksending.config;
 
 import com.chunksending.ChunkSending;
+import com.cupboard.config.CupboardConfig;
 import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonObject;
 
 public class CommonConfiguration implements ICommonConfig
 {
+    public static CupboardConfig<CommonConfiguration> config = new CupboardConfig("chunksending", new CommonConfiguration());
+
     public int maxChunksPerTick = 15;
     public int     maxChunksPerTickAll = 80;
     public boolean prioritizeDirection = true;
+    public boolean cacheChunkPackets = true;
     public boolean debugLogging        = false;
 
     public CommonConfiguration()
@@ -36,6 +40,11 @@ public class CommonConfiguration implements ICommonConfig
         entry3.addProperty("prioritizeDirection", prioritizeDirection);
         root.add("prioritizeDirection", entry3);
 
+        final JsonObject entry4 = new JsonObject();
+        entry4.addProperty("desc:", "Enables chunk packets to be re-used to send to multiple players instead of creating new ones. Especially useful for many players on a server. Disable if you're having mod compat issues,  Default: true");
+        entry4.addProperty("cacheChunkPackets", cacheChunkPackets);
+        root.add("cacheChunkPackets", entry4);
+
         final JsonObject entry23 = new JsonObject();
         entry23.addProperty("desc:", "Enable debug logging to show the amount of chunks sent/queued");
         entry23.addProperty("debugLogging", debugLogging);
@@ -47,20 +56,15 @@ public class CommonConfiguration implements ICommonConfig
 
     public void deserialize(JsonObject data)
     {
-        if (data == null)
-        {
-            ChunkSending.LOGGER.error("Config file was empty!");
-            return;
-        }
-
         maxChunksPerTick = Math.max(1 ,data.get("maxChunksPerTick").getAsJsonObject().get("maxChunksPerTick").getAsInt());
         debugLogging = data.get("debugLogging").getAsJsonObject().get("debugLogging").getAsBoolean();
         if (!data.has("version") && maxChunksPerTick == 5)
         {
             maxChunksPerTick = 15;
-            ChunkSending.config.save();
+            config.save();
         }
         maxChunksPerTickAll = Math.max(1 ,data.get("maxChunksPerTickAll").getAsJsonObject().get("maxChunksPerTickAll").getAsInt());
         prioritizeDirection = data.get("prioritizeDirection").getAsJsonObject().get("prioritizeDirection").getAsBoolean();
+        cacheChunkPackets = data.get("cacheChunkPackets").getAsJsonObject().get("cacheChunkPackets").getAsBoolean();
     }
 }
