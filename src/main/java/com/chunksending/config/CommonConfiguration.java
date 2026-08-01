@@ -1,6 +1,5 @@
 package com.chunksending.config;
 
-import com.chunksending.ChunkSending;
 import com.cupboard.config.CupboardConfig;
 import com.cupboard.config.ICommonConfig;
 import com.google.gson.JsonObject;
