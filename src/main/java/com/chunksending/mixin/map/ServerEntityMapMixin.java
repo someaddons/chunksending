@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Fixes getMapID lag, which unnecessarily gets called for all itemframe items
@@ -43,6 +44,15 @@ public abstract class ServerEntityMapMixin
     @Final
     private ServerLevel level;
 
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void checkType(final ServerLevel p_8528_, final Entity entity, final int p_8530_, final boolean p_8531_, final Consumer p_8532_, final CallbackInfo ci)
+    {
+        if (entity instanceof ItemFrame)
+        {
+            trackedPlayers = new ArrayList<>();
+        }
+    }
+
     @ModifyVariable(method = "sendChanges", at = @At(value = "STORE", ordinal = 0))
     private Entity test(final Entity entity)
     {
@@ -59,6 +69,12 @@ public abstract class ServerEntityMapMixin
             final boolean allUpdate = tickCompare % CommonConfiguration.config.getCommonConfig().itemFrameMapUpdateAllInterval == 0;
             if (nearbyUpdate || allUpdate)
             {
+                if (nearbyUpdate && !allUpdate && trackedPlayers.isEmpty())
+                {
+                    this.sendDirtyEntityData();
+                    return;
+                }
+
                 final ItemStack itemstack = itemframe.getItem();
                 MapItemSavedData mapitemsaveddata = MapItem.getSavedData(itemstack, this.level);
                 if (mapitemsaveddata != null)
@@ -66,7 +82,7 @@ public abstract class ServerEntityMapMixin
                     final CompoundTag compoundtag = itemstack.getTag();
                     final int id = compoundtag != null && compoundtag.contains("map", 99) ? compoundtag.getInt("map") : -1;
 
-                    for (ServerPlayer serverplayer : (allUpdate || trackedPlayers == null) ? this.level.players() : trackedPlayers)
+                    for (ServerPlayer serverplayer : allUpdate ? this.level.players() : trackedPlayers)
                     {
                         mapitemsaveddata.tickCarriedBy(serverplayer, itemstack);
                         Packet<?> packet = mapitemsaveddata.getUpdatePacket(id, serverplayer);
@@ -90,10 +106,6 @@ public abstract class ServerEntityMapMixin
     {
         if (entity instanceof ItemFrame)
         {
-            if (trackedPlayers == null)
-            {
-                trackedPlayers = new ArrayList<>();
-            }
             trackedPlayers.add(player);
         }
     }
