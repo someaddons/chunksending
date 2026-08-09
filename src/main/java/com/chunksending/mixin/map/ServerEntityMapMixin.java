@@ -1,6 +1,7 @@
 package com.chunksending.mixin.map;
 
 import com.chunksending.config.CommonConfiguration;
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerEntity;
@@ -12,18 +13,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Fixes getMapID lag, which unnecessarily gets called for all itemframe items
@@ -45,10 +45,19 @@ public abstract class ServerEntityMapMixin
     @Final
     private ServerLevel level;
 
-    @ModifyConstant(method = "sendChanges", constant = @Constant(intValue = 0))
-    private int skipVanilla(final int constant)
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void checkType(final ServerLevel p_8528_, final Entity entity, final int p_8530_, final boolean p_8531_, final Consumer p_8532_, final CallbackInfo ci)
     {
-        return 11;
+        if (entity instanceof ItemFrame)
+        {
+            trackedPlayers = new ArrayList<>();
+        }
+    }
+
+    @ModifyConstant(method = "sendChanges", constant = @Constant(classValue = ItemFrame.class, ordinal = 0), require = 1)
+    private boolean chunksending$disableVanillaMapUpdates(final Object reference, final Class<?> targetClass)
+    {
+        return false;
     }
 
     @Inject(method = "sendChanges", at = @At("RETURN"))
@@ -61,12 +70,18 @@ public abstract class ServerEntityMapMixin
             final boolean allUpdate = tickCompare % CommonConfiguration.config.getCommonConfig().itemFrameMapUpdateAllInterval == 0;
             if (nearbyUpdate || allUpdate)
             {
+                if (nearbyUpdate && !allUpdate && trackedPlayers.isEmpty())
+                {
+                    this.sendDirtyEntityData();
+                    return;
+                }
+
                 final ItemStack itemstack = itemframe.getItem();
                 MapItemSavedData mapitemsaveddata = MapItem.getSavedData(itemstack, this.level);
                 if (mapitemsaveddata != null)
                 {
                     MapId mapid = itemstack.get(DataComponents.MAP_ID);
-                    for (ServerPlayer serverplayer : (allUpdate || trackedPlayers == null) ? this.level.players() : trackedPlayers)
+                    for (ServerPlayer serverplayer : allUpdate ? this.level.players() : trackedPlayers)
                     {
                         mapitemsaveddata.tickCarriedBy(serverplayer, itemstack);
                         Packet<?> packet = mapitemsaveddata.getUpdatePacket(mapid, serverplayer);

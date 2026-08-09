@@ -39,6 +39,7 @@ public class PlayerChunkSenderPacketCacheMixin
             ClientboundLevelChunkWithLightPacket originalPacket = original.call(chunk, lightEngine, bitSet1, bitSet2);
             packetCache.setCachedPacket(originalPacket);
             EventHandler.addToClear(packetCache);
+            return originalPacket;
         }
 
         return original.call(chunk, lightEngine, bitSet1, bitSet2);

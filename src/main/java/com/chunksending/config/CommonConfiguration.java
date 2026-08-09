@@ -42,7 +42,7 @@ public class CommonConfiguration implements ICommonConfig
             "Maximum amount of chunk batches which are sent without waiting for the client to confirm their arrival, lower values help slow connections to not get overwhelmed on login. Default: 5, Vanilla:10");
         entry2.addProperty("maxUnacknowledgedChunkBatches", maxUnacknowledgedChunkBatches);
         entry2.addProperty("desc4:",
-            "Clients report how many chunks they desire to receive each tick, this setting allows multiplying it by a factor to reduce or increase the desired, lowering it reduces relative network bandwidth spent on chunks. Default: 0.8, Vanilla: 1.0");
+            "Clients report how many chunks they desire to receive each tick, this setting allows multiplying it by a factor to reduce or increase the desired, lowering it reduces relative network bandwidth spent on chunks. Default: 0.8, Vanilla: 1.0, minimum 0.1");
         entry2.addProperty("desiredChunksPerTickModifier", desiredChunksPerTickModifier);
         entry2.addProperty("desc5:", "Enables chunks to prioritize loading in the direction the player is facing. Default: true");
         entry2.addProperty("prioritizeDirection", prioritizeDirection);
@@ -86,8 +86,8 @@ public class CommonConfiguration implements ICommonConfig
         prioritizeDirection = data.get("chunkBatching").getAsJsonObject().get("prioritizeDirection").getAsBoolean();
         cacheChunkPackets = data.get("chunkBatching").getAsJsonObject().get("cacheChunkPackets").getAsBoolean();
         enableSinglePlayer = data.get("chunkBatching").getAsJsonObject().get("enableSinglePlayer").getAsBoolean();
-        desiredChunksPerTickModifier = data.get("chunkBatching").getAsJsonObject().get("desiredChunksPerTickModifier").getAsFloat();
-        maxUnacknowledgedChunkBatches = data.get("chunkBatching").getAsJsonObject().get("maxUnacknowledgedChunkBatches").getAsInt();
+        desiredChunksPerTickModifier = Math.max(0.1f, data.get("chunkBatching").getAsJsonObject().get("desiredChunksPerTickModifier").getAsFloat());
+        maxUnacknowledgedChunkBatches = Math.max(1, data.get("chunkBatching").getAsJsonObject().get("maxUnacknowledgedChunkBatches").getAsInt());
         itemFrameMapImprovements = data.get("ItemFrameMaps").getAsJsonObject().get("enabled").getAsBoolean();
         itemFrameMapUpdateAllInterval = Math.max(1, data.get("ItemFrameMaps").getAsJsonObject().get("itemFrameMapUpdateInterval").getAsInt());
         itemFrameMapUpdateNearbyInterval = Math.max(1, data.get("ItemFrameMaps").getAsJsonObject().get("itemFrameMapUpdateNearbyInterval").getAsInt());
