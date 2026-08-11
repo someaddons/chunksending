@@ -1,8 +1,8 @@
 package com.chunksending;
 
-import com.chunksending.config.CommonConfiguration;
-import com.cupboard.config.CupboardConfig;
+import com.chunksending.event.EventHandler;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,17 +13,15 @@ public class ChunkSending implements ModInitializer
 {
     public static final String                              MODID  = "chunksending";
     public static final Logger                              LOGGER = LogManager.getLogger();
-    public static       CupboardConfig<CommonConfiguration> config = new CupboardConfig<>(MODID, new CommonConfiguration());
     public static Random rand = new Random();
 
     public ChunkSending()
     {
+        ServerTickEvents.START_SERVER_TICK.register(EventHandler::onServerTick);
     }
 
     @Override
     public void onInitialize()
     {
-        config.load();
-        LOGGER.info(MODID + " mod initialized");
     }
 }

@@ -1,16 +1,19 @@
 {
   "required": false,
   "package": "com.chunksending.mixin",
-  "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "ServerPlayerChunkSending",
-    "ChunkHolderMixin",
-    "PlayerChunkSenderMixin"
+    "PlayerChunkSenderMixin",
+    "cache.ChunkAccessPacketCacheMixin",
+    "cache.ChunkHolderPacketCacheMixin",
+    "cache.ChunkMapPacketCacheMixin",
+    "cache.LevelChunkPacketCacheMixin",
+    "cache.PlayerChunkSenderPacketCacheMixin",
+    "map.ServerEntityMapMixin"
   ],
   "client": [
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   },
   "minVersion": "0.8"
 }
