@@ -18,17 +18,13 @@ import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.ToIntFunction;
 
 @Mixin(PlayerChunkSender.class)
 public class PlayerChunkSenderMixin implements IChunksendingPlayer
 {
-    // TODO: Hook config for vanilla, load logging, recheck other config features
     @Shadow
     @Final
     private LongSet pendingChunks;
@@ -56,8 +52,11 @@ public class PlayerChunkSenderMixin implements IChunksendingPlayer
     @Inject(method = "sendNextChunks", at = @At("HEAD"))
     private void adjustMaxSend(final ServerPlayer player, final CallbackInfo ci)
     {
-        final int amount = (player.level().getServer().isDedicatedServer() ? 1 : 3) * EventHandler.maxChunksPerPlayer;
-        desiredChunksPerTick = Math.min(desiredChunksPerTick, amount);
+        if ((!memoryConnection || CommonConfiguration.config.getCommonConfig().enableSinglePlayer))
+        {
+            final int amount = (player.level().getServer().isDedicatedServer() ? 1 : 3) * EventHandler.maxChunksPerPlayer;
+            desiredChunksPerTick = Math.min(desiredChunksPerTick, amount);
+        }
     }
 
     @ModifyConstant(method = "onChunkBatchReceivedByClient", constant = @Constant(intValue = 10))
@@ -66,41 +65,70 @@ public class PlayerChunkSenderMixin implements IChunksendingPlayer
         return CommonConfiguration.config.getCommonConfig().maxUnacknowledgedChunkBatches;
     }
 
-    @Inject(method = "sendNextChunks", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"), locals = LocalCapture.CAPTURE_FAILSOFT)
-    private void logChunks(
-        final ServerPlayer player,
-        final CallbackInfo ci,
-        final float f,
-        final ServerLevel serverlevel,
-        final ChunkMap chunkmap,
-        final List list,
-        final ServerGamePacketListenerImpl servergamepacketlistenerimpl)
+    @Unique
+    private static int chunksSend = 0;
+
+    @Inject(method = "sendChunk", at = @At("HEAD"))
+    private static void incChunKCounter(
+        final ServerGamePacketListenerImpl serverGamePacketListenerImpl,
+        final ServerLevel serverLevel,
+        final LevelChunk levelChunk,
+        final CallbackInfo ci)
     {
-        if (CommonConfiguration.config.getCommonConfig().debugLogging)
+        chunksSend++;
+    }
+
+    @Inject(method = "sendNextChunks", at = @At("HEAD"))
+    private void resetChunkCounter(final ServerPlayer serverPlayer, final CallbackInfo ci)
+    {
+        chunksSend = 0;
+    }
+
+    @Inject(method = "sendNextChunks", at = @At(value = "RETURN"))
+    private void logChunks(final ServerPlayer player, final CallbackInfo ci)
+    {
+        if (chunksSend > 0 && CommonConfiguration.config.getCommonConfig().debugLogging && (!memoryConnection || CommonConfiguration.config.getCommonConfig().enableSinglePlayer))
         {
             final int amount = (player.level().getServer().isDedicatedServer() ? 1 : 3) * EventHandler.maxChunksPerPlayer;
             ChunkSending.LOGGER.info(
-                "Sent: " + list.size() + " packets to " + player.getDisplayName().getString() + ", in queue:" + pendingChunks.size() + " maximum possible to send:" + amount
+                "Sent: " + chunksSend + " packets to " + player.getDisplayName().getString() + ", in queue:" + pendingChunks.size() + " maximum possible to send:" + amount
                     + " desiredChunksPerTick:" + desiredChunksPerTick + " unacknowledgedChunkBatches:" + unacknowledgedBatches + " batchQuota:" + batchQuota);
         }
     }
 
-    @Redirect(method = "collectChunksToSend", at = @At(value = "INVOKE", target = "Ljava/util/Comparator;comparingInt(Ljava/util/function/ToIntFunction;)Ljava/util/Comparator;", ordinal = 0))
-    private Comparator<Long> ajustSorting(final ToIntFunction<? super Long> keyExtractor, ChunkMap p_296053_, ChunkPos playerChunkPos)
+    @Redirect(method = "collectChunksToSend", at = @At(value = "INVOKE", target = "Ljava/util/Comparator;comparingInt(Ljava/util/function/ToIntFunction;)Ljava/util/Comparator;"))
+    private Comparator ajustSorting(final ToIntFunction keyExtractor, ChunkMap p_296053_, ChunkPos playerChunkPos)
     {
         if (!CommonConfiguration.config.getCommonConfig().prioritizeDirection)
         {
             return Comparator.comparingInt(keyExtractor);
         }
 
-        return Comparator.comparingInt((Long chunk) -> {
+        return Comparator.comparingInt((Object unknown) ->
+        {
+            final long chunk;
+            if (unknown instanceof Long value)
+            {
+                chunk = value;
+            }
+            else if (unknown instanceof LevelChunk levelChunk)
+            {
+                chunk = levelChunk.getPos().toLong();
+            }
+            else
+            {
+                throw new IllegalArgumentException(
+                    "Unexpected type in chunk comparator: " + unknown.getClass()
+                );
+            }
+
             final int chunkDistance = Math.max(
                 Math.abs(ChunkPos.getX(chunk) - playerChunkPos.x),
                 Math.abs(ChunkPos.getZ(chunk) - playerChunkPos.z)
             );
 
             return chunkDistance <= 1 ? chunkDistance : 100;
-        }).thenComparing(p -> playerChunkPos.distanceSquared(p));
+        }).thenComparingInt(keyExtractor);
     }
 
     @Redirect(method = "sendNextChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;chunkPosition()Lnet/minecraft/world/level/ChunkPos;"))
@@ -120,28 +148,9 @@ public class PlayerChunkSenderMixin implements IChunksendingPlayer
     @Inject(method = "onChunkBatchReceivedByClient", at = @At("RETURN"))
     private void adjustDesiredChunksPerTick(final float p_294462_, final CallbackInfo ci)
     {
-        desiredChunksPerTick *= CommonConfiguration.config.getCommonConfig().desiredChunksPerTickModifier;
-    }
-
-    @Unique
-    private boolean originalMemoryConnection = false;
-
-    @Inject(method = "collectChunksToSend", at = @At("HEAD"))
-    private void batchSinglePlayer(final ChunkMap p_296053_, final ChunkPos p_295659_, final CallbackInfoReturnable<List<LevelChunk>> cir)
-    {
-        if (CommonConfiguration.config.getCommonConfig().enableSinglePlayer)
+        if ((!memoryConnection || CommonConfiguration.config.getCommonConfig().enableSinglePlayer))
         {
-            originalMemoryConnection = memoryConnection;
-            memoryConnection = false;
-        }
-    }
-
-    @Inject(method = "collectChunksToSend", at = @At("RETURN"))
-    private void batchSinglePlayerRestore(final ChunkMap p_296053_, final ChunkPos p_295659_, final CallbackInfoReturnable<List<LevelChunk>> cir)
-    {
-        if (CommonConfiguration.config.getCommonConfig().enableSinglePlayer)
-        {
-            memoryConnection = originalMemoryConnection;
+            desiredChunksPerTick *= CommonConfiguration.config.getCommonConfig().desiredChunksPerTickModifier;
         }
     }
 }
