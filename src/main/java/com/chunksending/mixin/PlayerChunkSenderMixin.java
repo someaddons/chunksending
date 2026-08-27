@@ -113,7 +113,7 @@ public class PlayerChunkSenderMixin implements IChunksendingPlayer
             }
             else if (unknown instanceof LevelChunk levelChunk)
             {
-                chunk = levelChunk.getPos().toLong();
+                chunk = levelChunk.getPos().pack();
             }
             else
             {
@@ -123,8 +123,8 @@ public class PlayerChunkSenderMixin implements IChunksendingPlayer
             }
 
             final int chunkDistance = Math.max(
-                Math.abs(ChunkPos.getX(chunk) - playerChunkPos.x),
-                Math.abs(ChunkPos.getZ(chunk) - playerChunkPos.z)
+                Math.abs(ChunkPos.getX(chunk) - playerChunkPos.x()),
+                Math.abs(ChunkPos.getZ(chunk) - playerChunkPos.z())
             );
 
             return chunkDistance <= 1 ? chunkDistance : 100;

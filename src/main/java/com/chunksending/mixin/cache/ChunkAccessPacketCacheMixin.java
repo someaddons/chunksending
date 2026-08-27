@@ -15,13 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ChunkAccess.class)
 public class ChunkAccessPacketCacheMixin
 {
-    @Inject(method = "setUnsaved", at = @At("HEAD"))
-    private void chunksending$clearWhenDirty(final boolean unsaved, final CallbackInfo ci)
+    @Inject(method = "markUnsaved", at = @At("HEAD"))
+    private void chunksending$clearWhenDirty(final CallbackInfo ci)
     {
-        if (unsaved)
-        {
-            chunksending$clearCachedPacket();
-        }
+        chunksending$clearCachedPacket();
     }
 
     @Inject(method = "setHeightmap", at = @At("HEAD"))
