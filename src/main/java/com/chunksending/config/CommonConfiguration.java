@@ -60,7 +60,7 @@ public class CommonConfiguration implements ICommonConfig
         entry5.addProperty("desc2:",
             "Sets the update interval at which itemframes send map updates to ALL players in a dimension so reducing the update rate does reduce network traffic especially when a lot of itemframes with maps exist. Default: 100 Ticks, Vanilla: 10 Ticks");
         entry5.addProperty("itemFrameMapUpdateInterval", itemFrameMapUpdateAllInterval);
-        entry5.addProperty("descNearby:", "Sets the update interval at which itemframes send map updates to nearby players. Default: 20 Ticks, Vanilla: 10 Ticks");
+        entry5.addProperty("desc3:", "Sets the update interval at which itemframes send map updates to nearby players. Default: 20 Ticks, Vanilla: 10 Ticks");
         entry5.addProperty("itemFrameMapUpdateNearbyInterval", itemFrameMapUpdateNearbyInterval);
         root.add("ItemFrameMaps", entry5);
 
