@@ -25,7 +25,7 @@ public class CommonConfiguration implements ICommonConfig
     public JsonObject serialize()
     {
         final JsonObject root = new JsonObject();
-        root.addProperty("info:",
+        root.addProperty("desc:",
             "This is the config for the chunk sending mod, it is mostly relevant for dedicated servers. A Tick in minecraft happens 20 times a second(20TPS), a chunk is a 16x16 block area that gets sent to the client.");
 
         final JsonObject entry = new JsonObject();
@@ -52,9 +52,9 @@ public class CommonConfiguration implements ICommonConfig
 
         final JsonObject entry5 = new JsonObject();
         entry5.addProperty("desc:", "Settings for Item Frames containing maps sending updates to players. Default: enabled = true, set to false to disable this feature.");
-        entry5.addProperty("enabled:", itemFrameMapImprovements);
-        entry5.addProperty("descAll:",
-            "Sets the update interval at which itemframes send map updates to ALL players in a dimension so reducing the update rate does reduce network traffic especially when a lot of itemframes with maps exist. Default: 100 Ticks, Vanilla: 10 Ticks");
+        entry5.addProperty("enabled", itemFrameMapImprovements);
+        entry5.addProperty("desc2:",
+            "Sets the update interval at which itemframes send map updates to ALL players in a dimension, so reducing the update rate does reduce network traffic especially when a lot of itemframes with maps exist. Default: 100 Ticks, Vanilla: 10 Ticks");
         entry5.addProperty("itemFrameMapUpdateInterval", itemFrameMapUpdateAllInterval);
         entry5.addProperty("descNearby:", "Sets the update interval at which itemframes send map updates to nearby players. Default: 20 Ticks, Vanilla: 10 Ticks");
         entry5.addProperty("itemFrameMapUpdateNearbyInterval", itemFrameMapUpdateNearbyInterval);
