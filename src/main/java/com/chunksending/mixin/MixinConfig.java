@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class MixinConfig implements IMixinConfigPlugin
@@ -25,7 +26,7 @@ public class MixinConfig implements IMixinConfigPlugin
     @Override
     public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName)
     {
-        if (!CommonConfiguration.config.getCommonConfig().itemFrameMapImprovements && mixinClassName.contains("ServerEntityMapMixin"))
+        if (!CommonConfiguration.config.getCommonConfig().itemFrameMapImprovements && mixinClassName.toLowerCase(Locale.ROOT).contains("serverentitymapmixin"))
         {
             return false;
         }
