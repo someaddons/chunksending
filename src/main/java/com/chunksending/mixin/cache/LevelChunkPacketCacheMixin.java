@@ -40,7 +40,7 @@ public class LevelChunkPacketCacheMixin implements IChunkPacketCache
 
     @Inject(method = "setBlockState", at = @At("HEAD"))
     private void chunksending$clearBeforeBlockChange(
-        final BlockPos p_62865_, final BlockState p_62866_, final boolean p_62867_, final CallbackInfoReturnable<BlockState> cir)
+        final BlockPos pos, final BlockState state, final int flags, final CallbackInfoReturnable<BlockState> cir)
     {
         clearCachedPacket();
     }

@@ -26,7 +26,7 @@ public class ChunkMapPacketCacheMixin
     {
         for (final ChunkAccess chunk : chunks)
         {
-            final LevelChunk levelChunk = chunk instanceof LevelChunk fullChunk ? fullChunk : level.getChunk(chunk.getPos().x, chunk.getPos().z);
+            final LevelChunk levelChunk = chunk instanceof LevelChunk fullChunk ? fullChunk : level.getChunk(chunk.getPos().x(), chunk.getPos().z());
 
             if (levelChunk instanceof IChunkPacketCache packetCache)
             {

@@ -27,8 +27,8 @@
   "accessWidener": "chunksending.accessWidener",
   "depends": {
     "fabricloader": ">=0.11.3",
-    "fabric": "*",
-    "minecraft": "1.21.x",
+    "fabric-api": "*",
+    "minecraft": "26.1.x",
     "cupboard": "*",
     "java": ">=17"
   },

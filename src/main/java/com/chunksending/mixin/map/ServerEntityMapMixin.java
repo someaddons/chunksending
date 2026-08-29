@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Fixes getMapID lag, which unnecessarily gets called for all itemframe items
@@ -47,7 +46,7 @@ public abstract class ServerEntityMapMixin
     private ServerLevel level;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void checkType(final ServerLevel p_8528_, final Entity entity, final int p_8530_, final boolean p_8531_, final Consumer p_8532_, final CallbackInfo ci)
+    private void checkType(ServerLevel level, Entity entity, int updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, final CallbackInfo ci)
     {
         if (entity instanceof ItemFrame)
         {
@@ -84,7 +83,7 @@ public abstract class ServerEntityMapMixin
                     MapId mapid = itemstack.get(DataComponents.MAP_ID);
                     for (ServerPlayer serverplayer : allUpdate ? this.level.players() : trackedPlayers)
                     {
-                        mapitemsaveddata.tickCarriedBy(serverplayer, itemstack);
+                        mapitemsaveddata.tickCarriedBy(serverplayer, itemstack, itemframe);
                         Packet<?> packet = mapitemsaveddata.getUpdatePacket(mapid, serverplayer);
                         if (packet != null)
                         {

@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.BitSet;
 
@@ -31,7 +31,7 @@ public abstract class ChunkHolderPacketCacheMixin
     public abstract LevelChunk getTickingChunk();
 
     @Inject(method = "blockChanged", at = @At("RETURN"))
-    private void chunksending$clearAfterBlockChanged(final BlockPos pos, final CallbackInfo ci)
+    private void chunksending$clearAfterBlockChanged(final BlockPos pos, final CallbackInfoReturnable<Boolean> cir)
     {
         if (hasChangedSections)
         {
@@ -41,9 +41,7 @@ public abstract class ChunkHolderPacketCacheMixin
 
     @Inject(method = "sectionLightChanged", at = @At("RETURN"))
     private void chunksending$clearAfterLightChanged(
-        final LightLayer layer,
-        final int section,
-        final CallbackInfo ci)
+        final LightLayer layer, final int chunkY, final CallbackInfoReturnable<Boolean> cir)
     {
         if (!skyChangedLightSectionFilter.isEmpty() || !blockChangedLightSectionFilter.isEmpty())
         {

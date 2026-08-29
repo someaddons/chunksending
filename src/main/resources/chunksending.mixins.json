@@ -1,6 +1,7 @@
 {
   "required": false,
   "package": "com.chunksending.mixin",
+  "plugin": "com.chunksending.mixin.MixinConfig",
   "mixins": [
     "PlayerChunkSenderMixin",
     "cache.ChunkAccessPacketCacheMixin",
