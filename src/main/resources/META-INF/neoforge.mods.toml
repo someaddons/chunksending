@@ -37,7 +37,7 @@ Balances chunk network load
     modId="minecraft"
     mandatory=true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
-    versionRange="[26.1,26.2)"
+    versionRange="[26,27)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.chunksending]]
