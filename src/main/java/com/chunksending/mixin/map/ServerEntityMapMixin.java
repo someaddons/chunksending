@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.UpdateInterval;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
@@ -46,7 +47,13 @@ public abstract class ServerEntityMapMixin
     private ServerLevel level;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void checkType(ServerLevel level, Entity entity, int updateInterval, boolean trackDelta, ServerEntity.Synchronizer synchronizer, final CallbackInfo ci)
+    private void checkType(
+        final ServerLevel level,
+        final Entity entity,
+        final UpdateInterval updateInterval,
+        final boolean trackDelta,
+        final ServerEntity.Synchronizer synchronizer,
+        final CallbackInfo ci)
     {
         if (entity instanceof ItemFrame)
         {

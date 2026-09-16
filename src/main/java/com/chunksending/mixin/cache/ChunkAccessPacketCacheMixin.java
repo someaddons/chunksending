@@ -3,7 +3,6 @@ package com.chunksending.mixin.cache;
 import com.chunksending.chunk.IChunkPacketCache;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.biome.BiomeResolver;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,9 +37,7 @@ public class ChunkAccessPacketCacheMixin
 
     @Inject(method = "fillBiomesFromNoise", at = @At("HEAD"))
     private void chunksending$clearBeforeBiomeChange(
-        final BiomeResolver resolver,
-        final Climate.Sampler sampler,
-        final CallbackInfo ci)
+        final BiomeResolver biomeResolver, final CallbackInfo ci)
     {
         chunksending$clearCachedPacket();
     }
