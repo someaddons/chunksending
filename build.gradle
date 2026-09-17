@@ -10,7 +10,7 @@ buildscript {
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.147'
     id 'idea'
 }
 
@@ -120,7 +120,7 @@ configurations {
 }
 
 dependencies {
-    implementation "curse.maven:cupboard-326652:8623573"
+    implementation "curse.maven:cupboard-326652:8893470"
 }
 
 
