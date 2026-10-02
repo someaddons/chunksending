@@ -6,15 +6,54 @@ import com.chunksending.config.CommonConfiguration;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.lang.ref.WeakReference;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.LinkedHashSet;
 import java.util.concurrent.TimeUnit;
 
 public class EventHandler
 {
-    private static final long                         packetCacheLifetime = TimeUnit.MINUTES.toNanos(5);
-    private static final Map<IChunkPacketCache, Long> packetCachesToClear = new WeakHashMap<>();
+    private static final class PacketCacheEntry
+    {
+        private final WeakReference<IChunkPacketCache> packetCache;
+        private final int                              hashCode;
+        private final long                             expiresAt;
+
+        PacketCacheEntry(IChunkPacketCache cache, long expiresAt)
+        {
+            this.packetCache = new WeakReference<>(cache);
+            this.hashCode = System.identityHashCode(cache);
+            this.expiresAt = expiresAt;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+
+            if (!(obj instanceof PacketCacheEntry other))
+            {
+                return false;
+            }
+
+            final IChunkPacketCache a = packetCache.get();
+            final IChunkPacketCache b = other.packetCache.get();
+
+            return a != null && a == b;
+        }
+    }
+
+    private static final long                            packetCacheLifetime = TimeUnit.MINUTES.toNanos(5);
+    private static final LinkedHashSet<PacketCacheEntry> packetCachesToClear = new LinkedHashSet<>();
 
     public static int maxChunksPerPlayer = 15;
 
@@ -50,7 +89,9 @@ public class EventHandler
 
     public static void addToClear(final IChunkPacketCache packetCache)
     {
-        packetCachesToClear.put(packetCache, System.nanoTime() + packetCacheLifetime);
+        final PacketCacheEntry entry = new PacketCacheEntry(packetCache, System.nanoTime() + packetCacheLifetime);
+        packetCachesToClear.remove(entry);
+        packetCachesToClear.add(entry);
     }
 
     private static void clearExpiredPacketCaches()
@@ -61,19 +102,24 @@ public class EventHandler
         }
 
         final long now = System.nanoTime();
-        final Iterator<Map.Entry<IChunkPacketCache, Long>> iterator = packetCachesToClear.entrySet().iterator();
+        final Iterator<PacketCacheEntry> iterator = packetCachesToClear.iterator();
 
         while (iterator.hasNext())
         {
-            final Map.Entry<IChunkPacketCache, Long> entry = iterator.next();
-            final IChunkPacketCache packetCache = entry.getKey();
-            if (packetCache == null || now - entry.getValue() >= 0)
+            final PacketCacheEntry entry = iterator.next();
+            final IChunkPacketCache packetCache = entry.packetCache.get();
+            if (packetCache == null)
             {
-                if (packetCache != null)
-                {
-                    packetCache.clearCachedPacket();
-                }
                 iterator.remove();
+            }
+            else if (now - entry.expiresAt >= 0)
+            {
+                packetCache.clearCachedPacket();
+                iterator.remove();
+            }
+            else
+            {
+                break;
             }
         }
     }
